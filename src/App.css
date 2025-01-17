@@ -1,0 +1,17 @@
+.single-players-card{
+    height: 80px;
+}
+
+@media (max-height: 500px) {
+    .single-players-card{
+        height: 55px;
+    }
+    .player-circle{
+        height: 35px;
+        width: 35px;
+    }
+    .player-name{
+        font-size: xx-small;
+        padding: 2px 8px;
+    }
+}
