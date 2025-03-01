@@ -43,24 +43,49 @@ const GameScreen = () => {
     );
   }, []);
 
-  const handleTurn = () => {
+  const handleFirstEntry = () => {
+    const onlyOnePlayerHasCard =
+      currentRound.filter((player) => {
+        return player?.card && Object.keys(player.card).length > 0;
+      }).length === 1;
+
+    if (onlyOnePlayerHasCard) {
+      const playerWithCard = currentRound.find(
+        (player) => player?.card && Object.keys(player.card).length > 0
+      );
+
+      const card = playerWithCard ? playerWithCard.card : null;
+      setFirstEntryCard(card);
+    }
+  };
+
+  const handleTurn = (winnersName) => {
     const currentPlayerIndex = currentRound.findIndex(
       (player) => player.name === turn
     );
     const nextPlayerIndex = (currentPlayerIndex + 1) % currentRound.length;
     currentPlayerIndex === 0 && setIsCardClickable(false);
 
-    setTimeout(() => {
-      setTurn(currentRound[nextPlayerIndex].name);
-    }, 1000);
+    if (winnersName) {
+      console.log("Winner", winnersName);
+
+      setTurn(winnersName);
+    } else {
+      setTimeout(() => {
+        console.log("Non Winner", currentRound[nextPlayerIndex].name);
+
+        setTurn(currentRound[nextPlayerIndex].name);
+      }, 1000);
+    }
   };
 
-  //For Real Player
   const handleCardClick = (card, cardIndex) => {
     if (turn === "Player1" && isCardClickable) {
+      //Set Player state
       const updatedPlayers = removeCardFromPlayer(cardIndex, players, 0);
       setPlayers(updatedPlayers);
 
+      //Set Current Round state
       const updatedRound = addCardToCurrentRound(turn, card, currentRound, 0);
       setCurrentRound(updatedRound);
 
@@ -68,49 +93,100 @@ const GameScreen = () => {
     }
   };
 
-  //For bot
+  const selectBotsCardToPlace = (bot) => {
+    if (firstEntryCard) {
+      const matchedCardsBySuit = bot.cards
+        .map((item, index) => ({ item, index }))
+        .filter(
+          (cardWithIndex) => cardWithIndex.item.suit === firstEntryCard?.suit
+        );
+
+      return matchedCardsBySuit;
+    } else {
+      const mappedCardsByIndex = bot.cards.map((item, index) => ({
+        item,
+        index,
+      }));
+
+      return mappedCardsByIndex;
+    }
+  };
+
   const handleBotCardPlacement = (botName) => {
     const botIndex = players.findIndex((player) => player.name === botName);
     const bot = players[botIndex];
 
+    const matchedCardsBySuit = selectBotsCardToPlace(bot);
+
+    const selectedCard = bot.cards[matchedCardsBySuit?.[0]?.index || 0];
+
+    //Set Player state
+    const updatedPlayers = removeCardFromPlayer(
+      matchedCardsBySuit?.[0]?.index || 0,
+      players,
+      botIndex
+    );
+
+    setPlayers(updatedPlayers);
+
+    //Set Current Round state
     const updatedRound = addCardToCurrentRound(
       botName,
-      bot.cards[0],
+      selectedCard,
       currentRound,
       botIndex
     );
+
     setCurrentRound(updatedRound);
-
-    const updatedPlayers = removeCardFromPlayer(0, players, botIndex);
-    setPlayers(updatedPlayers);
-
     handleTurn();
   };
 
-  const resetTable = () => {
+  const chooseWinner = () => {
+    const sameSuitedPlayers = currentRound.filter((item) => {
+      return item.card.suit === firstEntryCard.suit;
+    });
+    const highestCard = sameSuitedPlayers.reduce((max, player) => {
+      return parseInt(player.card.value) > parseInt(max.card.value)
+        ? player
+        : max;
+    });
+
+    setCurrentWinner(highestCard.name);
+    setTimeout(() => {
+      // setTurn(highestCard.name);
+      handleTurn(highestCard.name);
+    }, 1000);
+
     setCurrentRound([
       { name: "Player1", card: {} },
       { name: "Player2", card: {} },
       { name: "Player3", card: {} },
       { name: "Player4", card: {} },
     ]);
+    setFirstEntryCard(null);
   };
 
-  useEffect(() => {
+  useEffect(() => {    
     const allPlayersHaveCard = currentRound.every(
       (player) => player.card && Object.keys(player.card).length > 0
     );
     if (allPlayersHaveCard) {
-      resetTable();
+      chooseWinner();
     }
 
     if (turn !== "Player1") {
       handleBotCardPlacement(turn);
     }
     if (turn === "Player1") {
+      console.log("d");
+      
       setIsCardClickable(true);
     }
   }, [turn]);
+
+  useEffect(() => {
+    handleFirstEntry();
+  }, [currentRound]);
 
   return (
     <div className="h-full">

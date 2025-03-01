@@ -68,10 +68,33 @@ const GameScreen = () => {
     }
   };
 
+  const selectBotsCardToPlace = (bot) => {
+    if (firstEntryCard) {
+      const matchedCardsBySuit = bot.cards
+        .map((item, index) => ({ item, index }))
+        .filter(
+          (cardWithIndex) => cardWithIndex.item.suit === firstEntryCard?.suit
+        );
+
+      return matchedCardsBySuit;
+    } else {
+      const mappedCardsByIndex = bot.cards.map((item, index) => ({
+        item,
+        index,
+      }));
+
+      return mappedCardsByIndex;
+    }
+  };
+
   //For bot
   const handleBotCardPlacement = (botName) => {
     const botIndex = players.findIndex((player) => player.name === botName);
     const bot = players[botIndex];
+
+    const matchedCardsBySuit = selectBotsCardToPlace(bot);
+console.log(matchedCardsBySuit);
+
 
     const updatedRound = addCardToCurrentRound(
       botName,

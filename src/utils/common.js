@@ -17,6 +17,11 @@ export const addCardToCurrentRound = (
   currentState,
   playerIndex
 ) => {
+  console.log( playerName,
+    card,
+    currentState,
+    playerIndex);
+  
   const updatedRound = [...currentState];
   updatedRound[playerIndex] = { name: playerName, card };
   return updatedRound;
